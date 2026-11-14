@@ -111,3 +111,67 @@ body:has(#track-dialog[open]) { overflow: hidden; }
   aside { grid-template-columns: minmax(0, 1fr); }
   .rules { grid-column: auto; }
 }
+
+.setup-field { position: relative; min-width: 0; }
+.setup-field select { width: 100%; }
+.control-icon { display: none; }
+.action > span + span { margin-left: 5px; }
+.track-actions { justify-content: flex-end; }
+.track-tool {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  font-size: 1.45rem;
+  line-height: 1;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.track-tool[hidden], .setup-field[hidden] { display: none; }
+.track-tool:hover, .track-tool[aria-pressed="true"] { background: #e9e5d9; }
+#stop-track { color: var(--accent); }
+#track-dialog .sheet-head { margin-bottom: 6px; }
+#track-dialog .sheet-foot { display: none; }
+#track-dialog .track-turn { padding-top: 8px; font-size: .84rem; }
+#track-dialog .overview .board {
+  min-width: 0;
+  width: min(100%, calc((100dvh - 150px) * 50 / 33));
+  margin: auto;
+}
+#track-dialog .overview .target { display: none; }
+#track-dialog .track-scroll { touch-action: pan-x pan-y; }
+
+@media (max-width: 860px), (pointer: coarse) {
+  .mast { display: block; padding-block: 14px 12px; }
+  .brand { gap: 9px; margin-bottom: 12px; }
+  .brand .flag { width: 39px; height: 39px; font-size: 23px; border-radius: 8px; }
+  .brand h1 { font-size: clamp(28px, 7vw, 37px); }
+  .brand p { margin-top: 3px; font-size: .63rem; }
+  #setup { display: grid; grid-template-columns: minmax(0, 1fr) minmax(100px, .58fr); gap: 6px; }
+  #field-count { grid-column: 1 / -1; }
+  #setup:has(#field-difficulty:not([hidden])) #field-count { grid-column: 1; }
+  #setup .action { grid-column: 1 / -1; min-height: 44px; }
+  #setup.race-locked .setup-field { display: none; }
+  .setup-field select { min-height: 44px; padding: 7px 5px 7px 30px; font-size: 1rem; }
+  .control-icon {
+    display: block;
+    position: absolute;
+    left: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent);
+    pointer-events: none;
+  }
+  main { gap: 10px; }
+  .sheet { min-width: 0; }
+  .sheet-head { margin-bottom: 7px; font-size: .67rem; }
+  .track-actions:not(:has(button:not([hidden]))) { display: none; }
+  .sheet:not(.racing) .board { min-width: 0; }
+  .sheet:not(.racing) .track-scroll { max-height: none; }
+  #track-dialog .racing:not(.overview) .board { min-width: 1800px; }
+  #track-dialog .target { width: 34px; }
+  .move-table button { min-height: 44px; }
+}

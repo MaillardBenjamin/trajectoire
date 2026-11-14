@@ -10,6 +10,9 @@ const trackHome = sheet.parentElement;
 const openTrack = byId("open-track");
 const closeTrack = byId("close-track");
 const locateCar = byId("locate-car");
+const trackOverview = byId("track-overview");
+const stopTrack = byId("stop-track");
+const mobileLayout = window.matchMedia("(max-width: 860px), (pointer: coarse)");
 const trackPass = byId("track-pass");
 const canvas = byId("track");
 const ctx = canvas.getContext("2d");
@@ -248,8 +251,13 @@ function render() {
   difficultySelect.disabled = locked || difficultySelect.hidden;
   startButton.hidden = locked;
   startButton.disabled = race.started && !winner;
-  startButton.textContent = winner ? "Nouvelle course" : "Lancer la course";
+  byId("start-label").textContent = winner ? "Nouvelle course" : "Lancer la course";
   stopButton.hidden = !race.started || Boolean(winner);
+  stopTrack.hidden = !trackDialog.open || stopButton.hidden;
+  openTrack.hidden = trackDialog.open || (mobileLayout.matches && !race.started);
+  sheet.classList.toggle("racing", race.started && !winner);
+  byId("field-difficulty").hidden = difficultySelect.hidden;
+  byId("setup").classList.toggle("race-locked", locked);
   const moves = !race.started || winner || aiTurn ? [] : getMoves(race);
   const legal = moves.filter((move) => move.legal);
   byId("turn-label").textContent = winner ? "Course terminée" : aiTurn ? "Tour de l’IA" : "À toi de jouer";
@@ -372,23 +380,38 @@ function centerTrack() {
   trackScroll.scrollTop = board.clientHeight * position.y / rows - trackScroll.clientHeight / 2;
 }
 
-openTrack.addEventListener("click", () => {
+function showTrack() {
   trackDialog.append(sheet);
   openTrack.hidden = true;
-  closeTrack.hidden = locateCar.hidden = byId("track-turn").hidden = false;
+  closeTrack.hidden = locateCar.hidden = trackOverview.hidden = byId("track-turn").hidden = false;
   trackDialog.showModal();
   render();
   closeTrack.focus({ preventScroll: true });
-});
+}
+openTrack.addEventListener("click", showTrack);
 closeTrack.addEventListener("click", () => trackDialog.close());
 trackDialog.addEventListener("close", () => {
   trackHome.prepend(sheet);
-  openTrack.hidden = false;
-  closeTrack.hidden = locateCar.hidden = byId("track-turn").hidden = true;
+  sheet.classList.remove("overview");
+  trackOverview.setAttribute("aria-pressed", "false");
+  closeTrack.hidden = locateCar.hidden = trackOverview.hidden = byId("track-turn").hidden = true;
   render();
-  openTrack.focus({ preventScroll: true });
+  (openTrack.hidden ? circuitSelect : openTrack).focus({ preventScroll: true });
 });
-locateCar.addEventListener("click", centerTrack);
+trackOverview.addEventListener("click", () => {
+  const overview = sheet.classList.toggle("overview");
+  trackOverview.setAttribute("aria-pressed", String(overview));
+  centerTrack();
+});
+locateCar.addEventListener("click", () => {
+  sheet.classList.remove("overview");
+  trackOverview.setAttribute("aria-pressed", "false");
+  centerTrack();
+});
+stopTrack.addEventListener("click", () => {
+  resetRace(selectedTrack());
+  trackDialog.close();
+});
 trackPass.addEventListener("click", () => {
   pass();
   locateCar.focus({ preventScroll: true });
@@ -426,7 +449,8 @@ byId("setup").addEventListener("submit", (event) => {
   event.preventDefault();
   if (race.started && !race.winner) return;
   resetRace(race.winner ? selectedTrack() : race.track, true);
-  focusTurn();
+  if (mobileLayout.matches) showTrack();
+  else focusTurn();
 });
 stopButton.addEventListener("click", () => {
   resetRace(selectedTrack());
@@ -437,4 +461,5 @@ byId("pass").addEventListener("click", () => {
   focusTurn();
 });
 resetRace(selectedTrack());
+mobileLayout.addEventListener("change", render);
 new ResizeObserver(draw).observe(board);

@@ -14,27 +14,41 @@
 <header class="mast">
   <div class="brand"><span class="flag" aria-hidden="true">⚑</span><div><h1>Trajectoires</h1><p>Course sur papier</p></div></div>
   <form id="setup">
-    <label class="sr-only" for="count">Mode de jeu</label>
-    <select id="count"><option value="solo">Solo contre l’IA</option><option value="2" selected>2 joueurs</option><option value="3">3 joueurs</option><option value="4">4 joueurs</option></select>
-    <label class="sr-only" for="difficulty">Difficulté</label>
-    <select id="difficulty" hidden disabled>
-      <option value="easy">Faible</option><option value="medium" selected>Moyen</option><option value="hard">Dur</option>
-    </select>
-    <label class="sr-only" for="circuit">Circuit</label>
-    <select id="circuit"><option value="0">Circuit aléatoire</option></select>
-    <label class="sr-only" for="laps">Nombre de tours</label>
-    <select id="laps"><option value="1">1 tour</option><option value="2">2 tours</option><option value="3">3 tours</option></select>
-    <button id="start-race" type="submit" class="new">Lancer la course</button>
-    <button id="stop-race" type="button" class="new" hidden>Arrêter la course</button>
+    <div class="setup-field" id="field-count">
+      <span class="control-icon" aria-hidden="true">♟</span>
+      <label class="sr-only" for="count">Mode de jeu</label>
+      <select id="count"><option value="solo">Solo contre l’IA</option><option value="2" selected>2 joueurs</option><option value="3">3 joueurs</option><option value="4">4 joueurs</option></select>
+    </div>
+    <div class="setup-field" id="field-difficulty">
+      <span class="control-icon" aria-hidden="true">◔</span>
+      <label class="sr-only" for="difficulty">Difficulté</label>
+      <select id="difficulty" hidden disabled>
+        <option value="easy">Faible</option><option value="medium" selected>Moyen</option><option value="hard">Dur</option>
+      </select>
+    </div>
+    <div class="setup-field" id="field-circuit">
+      <span class="control-icon" aria-hidden="true">◇</span>
+      <label class="sr-only" for="circuit">Circuit</label>
+      <select id="circuit"><option value="0">Circuit aléatoire</option></select>
+    </div>
+    <div class="setup-field" id="field-laps">
+      <span class="control-icon" aria-hidden="true">↻</span>
+      <label class="sr-only" for="laps">Nombre de tours</label>
+      <select id="laps"><option value="1">1 tour</option><option value="2">2 tours</option><option value="3">3 tours</option></select>
+    </div>
+    <button id="start-race" type="submit" class="new action"><span aria-hidden="true">▶</span><span id="start-label">Lancer la course</span></button>
+    <button id="stop-race" type="button" class="new action" hidden><span aria-hidden="true">■</span> Arrêter</button>
   </form>
 </header>
 <main>
   <section class="sheet" aria-label="Circuit">
     <div class="sheet-head"><strong id="race-name">Circuit 01</strong><span id="race-mode">Papier quadrillé · A4</span></div>
     <div class="track-actions">
-      <button id="open-track" type="button" class="new" aria-haspopup="dialog">Plein écran</button>
-      <button id="close-track" type="button" class="new" hidden>Quitter le plein écran</button>
-      <button id="locate-car" type="button" class="new" hidden>Centrer</button>
+      <button id="open-track" type="button" class="track-tool" aria-haspopup="dialog" aria-label="Plein écran" title="Plein écran"><span aria-hidden="true">⛶</span></button>
+      <button id="track-overview" type="button" class="track-tool" aria-label="Vue d’ensemble" aria-pressed="false" title="Vue d’ensemble" hidden><span aria-hidden="true">⊞</span></button>
+      <button id="locate-car" type="button" class="track-tool" aria-label="Centrer sur la voiture" title="Centrer sur la voiture" hidden><span aria-hidden="true">⌖</span></button>
+      <button id="stop-track" type="button" class="track-tool" aria-label="Arrêter la course" title="Arrêter la course" hidden><span aria-hidden="true">■</span></button>
+      <button id="close-track" type="button" class="track-tool" aria-label="Quitter le plein écran" title="Quitter le plein écran" hidden><span aria-hidden="true">×</span></button>
     </div>
     <div class="track-scroll" id="track-scroll" role="region" aria-label="Piste défilante" tabindex="0">
       <div class="board" id="board"><canvas id="track" aria-label="Circuit et trajectoires des voitures"></canvas></div>
