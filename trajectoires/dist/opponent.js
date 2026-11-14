@@ -85,7 +85,7 @@ function createOpponent(track, start, difficulty) {
     // Check every immediate reply, including a finish or a blocked exit.
     let worst = -Infinity;
     for (const reply of outcomes) {
-      if (reply.won) return 1200;
+      if (reply.won && (human.laps ?? 0) + 1 >= (human.lapCount ?? 1)) return 1200;
       const exits = legalMoves(next, reply);
       const cost = exits.length ?
         Math.min(...exits.map((move) => estimate(afterMove(track, next, move)))) :

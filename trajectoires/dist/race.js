@@ -12,20 +12,24 @@ let opponentWorker;
 let opponentTimer;
 const levels = { easy: "Faible", medium: "Moyen", hard: "Dur" };
 
-function newRace(playerCount, difficulty) {
+function newRace(playerCount, difficulty, circuit, lapCount) {
   clearTimeout(opponentTimer);
   opponentWorker?.terminate();
   opponentWorker = undefined;
   let track;
-  do {
-    track = generateTrack();
-  } while (race && JSON.stringify(track.spine) === JSON.stringify(race.track.spine));
+  if (circuit) {
+    track = presetTrack(circuit);
+  } else {
+    do {
+      track = generateTrack();
+    } while (race && JSON.stringify(track.spine) === JSON.stringify(race.track.spine));
+  }
   const lanes = { 2: [-1, 1], 3: [-1, 0, 1], 4: [-2, -1, 1, 2] }[playerCount];
   race = {
-    track, active: 0, winner: null, difficulty,
+    track, active: 0, winner: null, difficulty, lapCount,
     players: lanes.map((offset, index) => ({
       name: difficulty ? ["Toi", "Adversaire IA"][index] : `Joueur ${index + 1}`, color: playerColors[index], x: track.finish.x,
-      y: track.finish.y + offset, dx: 1, dy: 0, speed: 0, restarting: false, checked: 0,
+      y: track.finish.y + offset, dx: 1, dy: 0, speed: 0, restarting: false, checked: 0, laps: 0, lapCount,
       trail: [point(track.finish.x, track.finish.y + offset)]
     }))
   };
@@ -50,7 +54,9 @@ function newRace(playerCount, difficulty) {
   }
   raceNumber++;
   byId("race-mode").textContent = difficulty ? `Solo · ${levels[difficulty]}` : "Papier quadrillé · A4";
-  byId("race-number").textContent = String(raceNumber).padStart(2, "0");
+  byId("race-name").textContent = circuit ?
+    `${circuits.indexOf(circuit) + 1}/10 · ${circuit.name}` :
+    `Circuit ${String(raceNumber).padStart(2, "0")}`;
   render();
 }
 
@@ -60,8 +66,12 @@ function play(move) {
   const next = afterMove(race.track, player, move);
   Object.assign(player, next);
   player.trail.push(move.to);
-  if (next.won) race.winner = player;
-  else race.active = (race.active + 1) % race.players.length;
+  if (next.won) {
+    player.laps++;
+    player.checked = 0;
+    if (player.laps === race.lapCount) race.winner = player;
+  }
+  if (!race.winner) race.active = (race.active + 1) % race.players.length;
   advanceTurn();
 }
 
@@ -220,7 +230,7 @@ function render() {
   byId("turn-label").textContent = winner ? "Course terminée" : aiTurn ? "Tour de l’IA" : "À toi de jouer";
   byId("turn-title").textContent = winner ? (race.difficulty ? (winner === players[0] ? "Tu as gagné !" : "L’IA a gagné !") :
     `${winner.name} gagne !`) : player.name;
-  byId("turn-message").textContent = winner ? "Un tour complet, ligne d’arrivée franchie." :
+  byId("turn-message").textContent = winner ? `${race.lapCount} ${race.lapCount === 1 ? "tour terminé" : "tours terminés"}.` :
     aiTurn ? `Niveau ${levels[race.difficulty].toLowerCase()}` :
     legal.length ? "Choisis un déplacement." : "Aucun déplacement possible.";
   byId("pass").hidden = Boolean(winner || aiTurn || legal.length);
@@ -232,7 +242,8 @@ function render() {
     const dot = document.createElement("i");
     dot.className = "dot";
     const speed = document.createElement("span");
-    speed.textContent = `${entry.speed} car. / tour`;
+    const lap = Math.min(entry.laps + 1, race.lapCount);
+    speed.textContent = `Tour ${lap}/${race.lapCount} · ${entry.speed} car. / tour`;
     row.append(dot, entry.name, speed);
     return row;
   }));
@@ -318,6 +329,10 @@ function focusTurn() {
 
 const mode = byId("count");
 const difficulty = byId("difficulty");
+const circuitSelect = byId("circuit");
+circuits.forEach(({ name }, index) => {
+  circuitSelect.add(new Option(`${index + 1}. ${name}`, String(index + 1)));
+});
 function syncDifficulty() {
   difficulty.hidden = mode.value !== "solo";
   difficulty.disabled = difficulty.hidden;
@@ -327,7 +342,8 @@ syncDifficulty();
 
 function startFromSetup() {
   const solo = mode.value === "solo";
-  newRace(solo ? 2 : Number(mode.value), solo ? difficulty.value : null);
+  const circuit = circuits[Number(circuitSelect.value) - 1];
+  newRace(solo ? 2 : Number(mode.value), solo ? difficulty.value : null, circuit, Number(byId("laps").value));
 }
 
 byId("setup").addEventListener("submit", (event) => {

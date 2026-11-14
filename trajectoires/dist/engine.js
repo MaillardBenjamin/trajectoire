@@ -12,6 +12,38 @@ const point = (x, y) => ({ x, y });
 const between = (a, b, t) => point(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
 const randomInt = (from, to) => from + Math.floor(Math.random() * (to - from + 1));
 
+// Insets are listed in driving order along the bottom straight.
+const circuits = [
+  { name: "L’Anneau", radius: 3.5, bend: 8, insets: [] },
+  { name: "Les Quatre Virages", radius: 3.1, bend: 5, insets: [] },
+  { name: "La Boucle serrée", radius: 2.7, bend: 3, insets: [] },
+  { name: "Le Décroché", radius: 3.2, bend: 5, insets: [[34, 21, 8, 4]] },
+  { name: "La Chicane", radius: 2.9, bend: 5, insets: [[35, 22, 10, 3]] },
+  { name: "Le Virage en U", radius: 2.65, bend: 4, insets: [[34, 25, 12, 3]] },
+  { name: "Le Double Décroché", radius: 2.6, bend: 5, insets: [[38, 30, 8, 3], [22, 14, 8, 3]] },
+  { name: "L’Épingle", radius: 2.4, bend: 3, insets: [[34, 26, 14, 2]] },
+  { name: "Les Virages enchaînés", radius: 2.35, bend: 4, insets: [[38, 30, 12, 3], [22, 14, 10, 2]] },
+  { name: "Les Doubles Épingles", radius: 2.15, bend: 3, insets: [[38, 31, 15, 2], [22, 15, 14, 2]] }
+];
+
+function presetTrack({ radius, bend, insets }) {
+  const finish = { x: 24, y: 5, dx: 1, dy: 0 };
+  const bottom = 28;
+  const corners = [finish, point(45, 5), point(45, bottom)];
+  const bends = [0, bend, bend];
+  const checkpoints = [{ x: 45, y: 16, dx: 0, dy: 1 }];
+  for (const [right, left, depth, curve] of insets) {
+    const top = bottom - depth;
+    corners.push(point(right, bottom), point(right, top), point(left, top), point(left, bottom));
+    bends.push(curve, curve, curve, curve);
+    checkpoints.push({ x: (right + left) / 2, y: top, dx: -1, dy: 0 });
+  }
+  corners.push(point(5, bottom), point(5, 5), finish);
+  bends.push(bend, bend);
+  checkpoints.push({ x: 5, y: 16, dx: 0, dy: -1 });
+  return buildTrack(corners, (index) => bends[index], radius, checkpoints, finish);
+}
+
 function generateTrack() {
   const top = randomInt(5, 7);
   const bottom = randomInt(26, 28);
@@ -29,10 +61,21 @@ function generateTrack() {
     point(inletLeft, inlet), point(inletLeft, bottom),
     point(left, bottom), point(left, top), startPoint
   ];
-  const spine = [startPoint];
+  const checkpoints = [
+    { x: right, y: 15, dx: 0, dy: 1 },
+    { x: 17, y: bottom, dx: -1, dy: 0 },
+    { x: left, y: 15, dx: 0, dy: -1 }
+  ];
+  const finish = { ...startPoint, dx: 1, dy: 0 };
+  const bendAt = (index) => index >= 3 && index <= 6 ? randomInt(2, 3) : randomInt(3, 5);
+  return buildTrack(corners, bendAt, radius, checkpoints, finish);
+}
+
+function buildTrack(corners, bendAt, radius, checkpoints, finish) {
+  const spine = [corners[0]];
   for (let i = 1; i < corners.length - 1; i++) {
     const corner = corners[i];
-    const bend = i >= 3 && i <= 6 ? randomInt(2, 3) : randomInt(3, 5);
+    const bend = bendAt(i);
     const before = corners[i - 1];
     const after = corners[i + 1];
     const entry = between(corner, before, bend / Math.hypot(before.x - corner.x, before.y - corner.y));
@@ -44,18 +87,12 @@ function generateTrack() {
       if (Math.hypot(sample.x - previous.x, sample.y - previous.y) > epsilon) spine.push(sample);
     }
   }
-  spine.push(startPoint);
+  spine.push(corners.at(-1));
   const segments = spine.slice(1).map((to, index) => {
     const from = spine[index];
     const length = Math.hypot(to.x - from.x, to.y - from.y);
     return { from, length, ux: (to.x - from.x) / length, uy: (to.y - from.y) / length };
   });
-  const checkpoints = [
-    { x: right, y: 15, dx: 0, dy: 1 },
-    { x: 17, y: bottom, dx: -1, dy: 0 },
-    { x: left, y: 15, dx: 0, dy: -1 }
-  ];
-  const finish = { ...startPoint, dx: 1, dy: 0 };
   return { spine, segments, radius, checkpoints, finish };
 }
 

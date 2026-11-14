@@ -20,12 +20,16 @@
     <select id="difficulty" hidden disabled>
       <option value="easy">Faible</option><option value="medium" selected>Moyen</option><option value="hard">Dur</option>
     </select>
+    <label class="sr-only" for="circuit">Circuit</label>
+    <select id="circuit"><option value="0">Circuit aléatoire</option></select>
+    <label class="sr-only" for="laps">Nombre de tours</label>
+    <select id="laps"><option value="1">1 tour</option><option value="2">2 tours</option><option value="3">3 tours</option></select>
     <button type="submit" class="new">↻ &nbsp; Nouvelle course</button>
   </form>
 </header>
 <main>
   <section class="sheet" aria-label="Circuit">
-    <div class="sheet-head"><strong>Circuit <span id="race-number">01</span></strong><span id="race-mode">Papier quadrillé · A4</span></div>
+    <div class="sheet-head"><strong id="race-name">Circuit 01</strong><span id="race-mode">Papier quadrillé · A4</span></div>
     <div class="board" id="board"><canvas id="track" aria-label="Circuit et trajectoires des voitures"></canvas></div>
     <div class="sheet-foot"><span><i class="key finish"></i>Départ / arrivée</span><span><i class="key option"></i>Déplacement possible</span></div>
   </section>
