@@ -18,6 +18,7 @@
       <span class="control-icon" aria-hidden="true">♟</span>
       <label class="sr-only" for="count">Mode de jeu</label>
       <select id="count"><option value="solo">Solo contre l’IA</option><option value="2" selected>2 joueurs</option><option value="3">3 joueurs</option><option value="4">4 joueurs</option></select>
+      <span class="compact-value" aria-hidden="true"></span>
     </div>
     <div class="setup-field" id="field-difficulty">
       <span class="control-icon" aria-hidden="true">◔</span>
@@ -25,19 +26,22 @@
       <select id="difficulty" hidden disabled>
         <option value="easy">Faible</option><option value="medium" selected>Moyen</option><option value="hard">Dur</option>
       </select>
+      <span class="compact-value" aria-hidden="true"></span>
     </div>
     <div class="setup-field" id="field-circuit">
       <span class="control-icon" aria-hidden="true">◇</span>
       <label class="sr-only" for="circuit">Circuit</label>
       <select id="circuit"><option value="0">Circuit aléatoire</option></select>
+      <span class="compact-value" aria-hidden="true"></span>
     </div>
     <div class="setup-field" id="field-laps">
       <span class="control-icon" aria-hidden="true">↻</span>
       <label class="sr-only" for="laps">Nombre de tours</label>
       <select id="laps"><option value="1">1 tour</option><option value="2">2 tours</option><option value="3">3 tours</option></select>
+      <span class="compact-value" aria-hidden="true"></span>
     </div>
-    <button id="start-race" type="submit" class="new action"><span aria-hidden="true">▶</span><span id="start-label">Lancer la course</span></button>
-    <button id="stop-race" type="button" class="new action" hidden><span aria-hidden="true">■</span> Arrêter</button>
+    <button id="start-race" type="submit" class="new action" title="Lancer la course"><span aria-hidden="true">▶</span><span id="start-label" class="action-label">Lancer la course</span></button>
+    <button id="stop-race" type="button" class="new action" title="Arrêter la course" hidden><span aria-hidden="true">■</span><span class="action-label">Arrêter la course</span></button>
   </form>
 </header>
 <main>
@@ -55,7 +59,8 @@
     </div>
     <div class="track-turn" id="track-turn" hidden>
       <p id="track-status" aria-live="polite"></p>
-      <button id="track-pass" type="button" class="new" hidden>Passer mon tour</button>
+      <canvas id="track-map" aria-label="Mini-carte du circuit et position des voitures"></canvas>
+      <button id="track-pass" type="button" class="new action" title="Passer mon tour" hidden><span aria-hidden="true">↷</span><span class="action-label">Passer mon tour</span></button>
     </div>
     <div class="sheet-foot"><span><i class="key finish"></i>Départ / arrivée</span><span><i class="key option"></i>Déplacement possible</span></div>
   </section>
@@ -63,7 +68,7 @@
     <section class="card" aria-labelledby="turn-title">
       <div id="turn" aria-live="polite"><p class="eyebrow" id="turn-label">À toi de jouer</p><h2 id="turn-title"></h2><p id="turn-message"></p><p id="elimination"></p></div>
       <div class="move-table" id="moves"></div>
-      <button id="pass" class="pass" hidden>Passer mon tour</button>
+      <button id="pass" class="pass action" title="Passer mon tour" hidden><span aria-hidden="true">↷</span><span class="action-label">Passer mon tour</span></button>
     </section>
     <section class="card lineup" aria-labelledby="lineup-title"><h2 id="lineup-title">Joueurs</h2><ul id="players"></ul></section>
     <details class="card rules"><summary>Règles du jeu</summary>

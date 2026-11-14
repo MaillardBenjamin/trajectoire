@@ -4,6 +4,8 @@ const playerColors = ["#a23b24", "#225d9b", "#23705a", "#773889"];
 const byId = (id) => document.getElementById(id);
 const board = byId("board");
 const trackScroll = byId("track-scroll");
+const trackMap = byId("track-map");
+const mapContext = trackMap.getContext("2d");
 const trackDialog = byId("track-dialog");
 const sheet = board.closest(".sheet");
 const trackHome = sheet.parentElement;
@@ -251,12 +253,21 @@ function render() {
   difficultySelect.disabled = locked || difficultySelect.hidden;
   startButton.hidden = locked;
   startButton.disabled = race.started && !winner;
-  byId("start-label").textContent = winner ? "Nouvelle course" : "Lancer la course";
+  const startLabel = winner ? "Nouvelle course" : "Lancer la course";
+  byId("start-label").textContent = startButton.title = startLabel;
   stopButton.hidden = !race.started || Boolean(winner);
   stopTrack.hidden = !trackDialog.open || stopButton.hidden;
   openTrack.hidden = trackDialog.open || (mobileLayout.matches && !race.started);
   sheet.classList.toggle("racing", race.started && !winner);
   byId("field-difficulty").hidden = difficultySelect.hidden;
+  for (const [select, value] of [
+    [mode, mode.value === "solo" ? "Solo" : mode.value],
+    [difficultySelect, difficultySelect.selectedOptions[0].textContent],
+    [circuitSelect, circuitSelect.value === "0" ? "⤨" : circuitSelect.value],
+    [lapSelect, lapSelect.value]
+  ]) {
+    select.parentElement.querySelector(".compact-value").textContent = value;
+  }
   byId("setup").classList.toggle("race-locked", locked);
   const moves = !race.started || winner || aiTurn ? [] : getMoves(race);
   const legal = moves.filter((move) => move.legal);
@@ -372,12 +383,62 @@ function render() {
   centerTrack();
 }
 
+function drawTrackMap() {
+  if (!trackDialog.open) return;
+  const ratio = window.devicePixelRatio || 1;
+  const width = Math.round(trackMap.clientWidth * ratio);
+  const height = Math.round(trackMap.clientHeight * ratio);
+  if (!width || !height || !board.clientWidth || !board.clientHeight) return;
+  if (trackMap.width !== width) trackMap.width = width;
+  if (trackMap.height !== height) trackMap.height = height;
+  mapContext.setTransform(width / columns, 0, 0, height / rows, 0, 0);
+  mapContext.fillStyle = "#f1eee3";
+  mapContext.fillRect(0, 0, columns, rows);
+  const { spine, radius, finish } = race.track;
+  mapContext.beginPath();
+  mapContext.moveTo(spine[0].x, spine[0].y);
+  for (const p of spine.slice(1)) mapContext.lineTo(p.x, p.y);
+  mapContext.closePath();
+  mapContext.lineJoin = "round";
+  mapContext.lineWidth = 2 * radius + .5;
+  mapContext.strokeStyle = "#818781";
+  mapContext.stroke();
+  mapContext.lineWidth = 2 * radius;
+  mapContext.strokeStyle = "#fffdf6";
+  mapContext.stroke();
+  mapContext.fillStyle = "#34434b";
+  mapContext.fillRect(finish.x - .3, finish.y - radius, .6, radius * 2);
+
+  const unitsX = columns / board.clientWidth;
+  const unitsY = rows / board.clientHeight;
+  mapContext.strokeStyle = "#17658b";
+  mapContext.lineWidth = .48;
+  const visibleWidth = Math.min(trackScroll.clientWidth * unitsX, columns);
+  const visibleHeight = Math.min(trackScroll.clientHeight * unitsY, rows);
+  if (visibleWidth < columns || visibleHeight < rows) {
+    mapContext.strokeRect(trackScroll.scrollLeft * unitsX, trackScroll.scrollTop * unitsY, visibleWidth, visibleHeight);
+  }
+  for (const [index, player] of race.players.entries()) {
+    if (player.eliminated) continue;
+    mapContext.beginPath();
+    mapContext.arc(player.x, player.y, 1, 0, 2 * Math.PI);
+    mapContext.fillStyle = player.color;
+    mapContext.fill();
+    mapContext.lineWidth = .32;
+    mapContext.strokeStyle = index === race.active ? "#252d35" : "#fffdf6";
+    mapContext.stroke();
+  }
+}
+
+trackScroll.addEventListener("scroll", drawTrackMap, { passive: true });
+
 function centerTrack() {
   const { track, players, active, difficulty, started, winner } = race;
   const car = winner ?? players[difficulty ? 0 : active];
   const position = started ? car : track.finish;
   trackScroll.scrollLeft = board.clientWidth * position.x / columns - trackScroll.clientWidth / 2;
   trackScroll.scrollTop = board.clientHeight * position.y / rows - trackScroll.clientHeight / 2;
+  drawTrackMap();
 }
 
 function showTrack() {
@@ -462,4 +523,10 @@ byId("pass").addEventListener("click", () => {
 });
 resetRace(selectedTrack());
 mobileLayout.addEventListener("change", render);
-new ResizeObserver(draw).observe(board);
+const trackResize = new ResizeObserver(() => {
+  draw();
+  drawTrackMap();
+});
+trackResize.observe(board);
+trackResize.observe(trackScroll);
+trackResize.observe(trackMap);
