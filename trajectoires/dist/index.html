@@ -31,7 +31,18 @@
 <main>
   <section class="sheet" aria-label="Circuit">
     <div class="sheet-head"><strong id="race-name">Circuit 01</strong><span id="race-mode">Papier quadrillé · A4</span></div>
-    <div class="board" id="board"><canvas id="track" aria-label="Circuit et trajectoires des voitures"></canvas></div>
+    <div class="track-actions">
+      <button id="open-track" type="button" class="new" aria-haspopup="dialog">Plein écran</button>
+      <button id="close-track" type="button" class="new" hidden>Quitter le plein écran</button>
+      <button id="locate-car" type="button" class="new" hidden>Centrer</button>
+    </div>
+    <div class="track-scroll" id="track-scroll" role="region" aria-label="Piste défilante" tabindex="0">
+      <div class="board" id="board"><canvas id="track" aria-label="Circuit et trajectoires des voitures"></canvas></div>
+    </div>
+    <div class="track-turn" id="track-turn" hidden>
+      <p id="track-status" aria-live="polite"></p>
+      <button id="track-pass" type="button" class="new" hidden>Passer mon tour</button>
+    </div>
     <div class="sheet-foot"><span><i class="key finish"></i>Départ / arrivée</span><span><i class="key option"></i>Déplacement possible</span></div>
   </section>
   <aside>
@@ -52,5 +63,6 @@
     </details>
   </aside>
 </main>
+<dialog id="track-dialog" aria-labelledby="race-name"></dialog>
 </body>
 </html>

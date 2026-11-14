@@ -3,6 +3,14 @@
 const playerColors = ["#a23b24", "#225d9b", "#23705a", "#773889"];
 const byId = (id) => document.getElementById(id);
 const board = byId("board");
+const trackScroll = byId("track-scroll");
+const trackDialog = byId("track-dialog");
+const sheet = board.closest(".sheet");
+const trackHome = sheet.parentElement;
+const openTrack = byId("open-track");
+const closeTrack = byId("close-track");
+const locateCar = byId("locate-car");
+const trackPass = byId("track-pass");
 const canvas = byId("track");
 const ctx = canvas.getContext("2d");
 let race;
@@ -242,6 +250,12 @@ function render() {
     byId("turn-message").textContent = "Choisis tes réglages, puis lance la course.";
   }
   byId("pass").hidden = Boolean(!race.started || winner || aiTurn || legal.length);
+  trackPass.hidden = byId("pass").hidden;
+  if (trackDialog.open) {
+    byId("track-status").textContent = winner ? byId("turn-title").textContent :
+      !race.started ? "Lance la course depuis les réglages." :
+      aiTurn ? "Tour de l’IA" : `${player.name} · Tour ${player.laps + 1}/${race.lapCount}`;
+  }
   board.querySelectorAll(".target").forEach((target) => target.remove());
   byId("players").replaceChildren(...players.map((entry, index) => {
     const row = document.createElement("li");
@@ -292,13 +306,16 @@ function render() {
       target = document.createElement("button");
       target.type = "button";
       target.className = "target";
-      target.tabIndex = -1;
+      target.tabIndex = trackDialog.open ? 0 : -1;
       target.title = label;
       target.setAttribute("aria-label", label);
       target.style.left = `${move.to.x / columns * 100}%`;
       target.style.top = `${move.to.y / rows * 100}%`;
       target.style.color = player.color;
-      target.addEventListener("click", () => play(move));
+      target.addEventListener("click", (event) => {
+        play(move);
+        if (trackDialog.open && event.detail === 0) trackScroll.focus({ preventScroll: true });
+      });
       board.append(target);
       targetButtons.set(key, target);
     }
@@ -326,10 +343,41 @@ function render() {
     target.addEventListener("pointerleave", clearPreview);
   }
   draw();
+  centerTrack();
 }
 
+function centerTrack() {
+  const { track, players, active, difficulty, started, winner } = race;
+  const car = winner ?? players[difficulty ? 0 : active];
+  const position = started ? car : track.finish;
+  trackScroll.scrollLeft = board.clientWidth * position.x / columns - trackScroll.clientWidth / 2;
+  trackScroll.scrollTop = board.clientHeight * position.y / rows - trackScroll.clientHeight / 2;
+}
+
+openTrack.addEventListener("click", () => {
+  trackDialog.append(sheet);
+  openTrack.hidden = true;
+  closeTrack.hidden = locateCar.hidden = byId("track-turn").hidden = false;
+  trackDialog.showModal();
+  render();
+  closeTrack.focus({ preventScroll: true });
+});
+closeTrack.addEventListener("click", () => trackDialog.close());
+trackDialog.addEventListener("close", () => {
+  trackHome.prepend(sheet);
+  openTrack.hidden = false;
+  closeTrack.hidden = locateCar.hidden = byId("track-turn").hidden = true;
+  render();
+  openTrack.focus({ preventScroll: true });
+});
+locateCar.addEventListener("click", centerTrack);
+trackPass.addEventListener("click", () => {
+  pass();
+  locateCar.focus({ preventScroll: true });
+});
+
 function focusTurn() {
-  if (race.difficulty && race.active === 1 && !race.winner) return;
+  if (trackDialog.open || (race.difficulty && race.active === 1 && !race.winner)) return;
   const title = byId("turn-title");
   title.tabIndex = -1;
   title.focus({ preventScroll: true });
