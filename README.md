@@ -2,7 +2,7 @@
 
 Trajectoires recrée un jeu de course automobile joué en amphithéâtre sur une feuille A4 à petits carreaux. Chaque partie se déroule sur un circuit fermé. Les voitures partent d’intersections distinctes sur la grille et laissent leur trajectoire sur le papier.
 
-[Jouer à Trajectoires](https://trajectoires-course-papier.beigetitan17.chatgpt.site) (accès privé)
+[Jouer à Trajectoires](https://trajectoires-course-papier.beigetitan17.chatgpt.site)
 
 ## Lancer le jeu en local
 
