@@ -24,7 +24,8 @@ form { display: flex; flex-wrap: wrap; gap: 8px; }
 select, .new, .pass { border: 1px solid var(--border); border-radius: 7px; padding: 10px 12px; font-weight: 650; }
 select { background: var(--paper); color: var(--ink); }
 .new, .pass { background: #26323a; color: #fffdf6; border-color: #26323a; }
-.new:hover, .pass:hover { background: #415461; }
+.new:disabled { opacity: .6; cursor: default; }
+.new:not(:disabled):hover, .pass:hover { background: #415461; }
 main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(252px, 295px); align-items: start; gap: 20px; padding-bottom: 30px; }
 .sheet, .card { background: var(--paper); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 2px 5px #24291e0b; }
 .sheet { padding: clamp(10px, 1.65vw, 22px); }

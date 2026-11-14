@@ -6,34 +6,29 @@ const board = byId("board");
 const canvas = byId("track");
 const ctx = canvas.getContext("2d");
 let race;
-let raceNumber = 0;
 let preview = null;
 let opponentWorker;
 let opponentTimer;
 const levels = { easy: "Faible", medium: "Moyen", hard: "Dur" };
 
-function newRace(playerCount, difficulty, circuit, lapCount) {
+function resetRace(track, started = false) {
   clearTimeout(opponentTimer);
   opponentWorker?.terminate();
   opponentWorker = undefined;
-  let track;
-  if (circuit) {
-    track = presetTrack(circuit);
-  } else {
-    do {
-      track = generateTrack();
-    } while (race && JSON.stringify(track.spine) === JSON.stringify(race.track.spine));
-  }
+  const circuit = circuits[Number(circuitSelect.value) - 1];
+  const playerCount = mode.value === "solo" ? 2 : Number(mode.value);
+  const difficulty = mode.value === "solo" ? difficultySelect.value : null;
+  const lapCount = Number(lapSelect.value);
   const lanes = { 2: [-1, 1], 3: [-1, 0, 1], 4: [-2, -1, 1, 2] }[playerCount];
   race = {
-    track, active: 0, winner: null, difficulty, lapCount,
+    track, started, moved: false, active: 0, winner: null, difficulty, lapCount,
     players: lanes.map((offset, index) => ({
       name: difficulty ? ["Toi", "Adversaire IA"][index] : `Joueur ${index + 1}`, color: playerColors[index], x: track.finish.x,
       y: track.finish.y + offset, dx: 1, dy: 0, speed: 0, restarting: false, checked: 0, laps: 0, lapCount,
       trail: [point(track.finish.x, track.finish.y + offset)]
     }))
   };
-  if (difficulty && typeof Worker === "function") {
+  if (started && difficulty && typeof Worker === "function") {
     try {
       opponentWorker = new Worker("opponent-worker.js");
       const currentRace = race;
@@ -52,16 +47,16 @@ function newRace(playerCount, difficulty, circuit, lapCount) {
       opponentWorker = undefined;
     }
   }
-  raceNumber++;
   byId("race-mode").textContent = difficulty ? `Solo · ${levels[difficulty]}` : "Papier quadrillé · A4";
   byId("race-name").textContent = circuit ?
     `${circuits.indexOf(circuit) + 1}/10 · ${circuit.name}` :
-    `Circuit ${String(raceNumber).padStart(2, "0")}`;
+    "Circuit aléatoire";
   render();
 }
 
 function play(move) {
-  if (race.winner || !move.legal) return;
+  if (!race.started || race.winner || !move.legal) return;
+  race.moved = true;
   const player = race.players[race.active];
   const next = afterMove(race.track, player, move);
   Object.assign(player, next);
@@ -76,7 +71,7 @@ function play(move) {
 }
 
 function pass() {
-  if (race.winner || getMoves(race).some((move) => move.legal)) return;
+  if (!race.started || race.winner || getMoves(race).some((move) => move.legal)) return;
   const player = race.players[race.active];
   Object.assign(player, afterPass(player));
   race.active = (race.active + 1) % race.players.length;
@@ -225,7 +220,15 @@ function render() {
   const { active, players, winner } = race;
   const player = players[active];
   const aiTurn = Boolean(race.difficulty && active === 1 && !winner);
-  const moves = winner || aiTurn ? [] : getMoves(race);
+  const locked = race.moved && !winner;
+  mode.disabled = circuitSelect.disabled = lapSelect.disabled = locked;
+  difficultySelect.hidden = mode.value !== "solo";
+  difficultySelect.disabled = locked || difficultySelect.hidden;
+  startButton.hidden = locked;
+  startButton.disabled = race.started && !winner;
+  startButton.textContent = winner ? "Nouvelle course" : "Lancer la course";
+  stopButton.hidden = !race.started || Boolean(winner);
+  const moves = !race.started || winner || aiTurn ? [] : getMoves(race);
   const legal = moves.filter((move) => move.legal);
   byId("turn-label").textContent = winner ? "Course terminée" : aiTurn ? "Tour de l’IA" : "À toi de jouer";
   byId("turn-title").textContent = winner ? (race.difficulty ? (winner === players[0] ? "Tu as gagné !" : "L’IA a gagné !") :
@@ -233,7 +236,12 @@ function render() {
   byId("turn-message").textContent = winner ? `${race.lapCount} ${race.lapCount === 1 ? "tour terminé" : "tours terminés"}.` :
     aiTurn ? `Niveau ${levels[race.difficulty].toLowerCase()}` :
     legal.length ? "Choisis un déplacement." : "Aucun déplacement possible.";
-  byId("pass").hidden = Boolean(winner || aiTurn || legal.length);
+  if (!race.started) {
+    byId("turn-label").textContent = "Avant le départ";
+    byId("turn-title").textContent = "Course prête";
+    byId("turn-message").textContent = "Choisis tes réglages, puis lance la course.";
+  }
+  byId("pass").hidden = Boolean(!race.started || winner || aiTurn || legal.length);
   board.querySelectorAll(".target").forEach((target) => target.remove());
   byId("players").replaceChildren(...players.map((entry, index) => {
     const row = document.createElement("li");
@@ -328,31 +336,39 @@ function focusTurn() {
 }
 
 const mode = byId("count");
-const difficulty = byId("difficulty");
+const difficultySelect = byId("difficulty");
 const circuitSelect = byId("circuit");
+const lapSelect = byId("laps");
+const startButton = byId("start-race");
+const stopButton = byId("stop-race");
+
 circuits.forEach(({ name }, index) => {
   circuitSelect.add(new Option(`${index + 1}. ${name}`, String(index + 1)));
 });
-function syncDifficulty() {
-  difficulty.hidden = mode.value !== "solo";
-  difficulty.disabled = difficulty.hidden;
-}
-mode.addEventListener("change", syncDifficulty);
-syncDifficulty();
 
-function startFromSetup() {
-  const solo = mode.value === "solo";
+function selectedTrack() {
   const circuit = circuits[Number(circuitSelect.value) - 1];
-  newRace(solo ? 2 : Number(mode.value), solo ? difficulty.value : null, circuit, Number(byId("laps").value));
+  return circuit ? presetTrack(circuit) : generateTrack();
+}
+
+circuitSelect.addEventListener("change", () => resetRace(selectedTrack()));
+for (const select of [mode, difficultySelect, lapSelect]) {
+  select.addEventListener("change", () => resetRace(race.track));
 }
 
 byId("setup").addEventListener("submit", (event) => {
   event.preventDefault();
-  startFromSetup();
+  if (race.started && !race.winner) return;
+  resetRace(race.winner ? selectedTrack() : race.track, true);
+  focusTurn();
+});
+stopButton.addEventListener("click", () => {
+  resetRace(selectedTrack());
+  circuitSelect.focus();
 });
 byId("pass").addEventListener("click", () => {
   pass();
   focusTurn();
 });
-startFromSetup();
+resetRace(selectedTrack());
 new ResizeObserver(draw).observe(board);

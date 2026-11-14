@@ -24,7 +24,8 @@
     <select id="circuit"><option value="0">Circuit aléatoire</option></select>
     <label class="sr-only" for="laps">Nombre de tours</label>
     <select id="laps"><option value="1">1 tour</option><option value="2">2 tours</option><option value="3">3 tours</option></select>
-    <button type="submit" class="new">↻ &nbsp; Nouvelle course</button>
+    <button id="start-race" type="submit" class="new">Lancer la course</button>
+    <button id="stop-race" type="button" class="new" hidden>Arrêter la course</button>
   </form>
 </header>
 <main>
@@ -46,7 +47,7 @@
         <li>Tu peux modifier ta vitesse d’un carreau par tour. Tout droit prolonge ta trajectoire. En ralentissant, tu peux tourner plus serré.</li>
         <li>Ton trait doit rester sur la route et se terminer sur une intersection libre.</li>
         <li>Si tu es bloqué, passe ton tour. Tu repartiras à vitesse 1.</li>
-        <li>Le premier à boucler un tour et à refranchir la ligne dans le sens de la course gagne.</li>
+        <li>Le premier à boucler le nombre de tours choisi dans le sens de la course gagne.</li>
       </ul>
     </details>
   </aside>

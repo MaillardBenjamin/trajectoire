@@ -14,7 +14,7 @@ cd trajectoire
 python3 -m http.server 8000 --bind 127.0.0.1 --directory trajectoires/dist
 ```
 
-Ouvre [http://127.0.0.1:8000](http://127.0.0.1:8000), choisis le mode de jeu, le circuit et le nombre de tours, puis clique sur **Nouvelle course**.
+Ouvre [http://127.0.0.1:8000](http://127.0.0.1:8000), choisis le mode de jeu, le circuit et le nombre de tours, puis clique sur **Lancer la course**. Le circuit s’affiche dès sa sélection. Après le premier déplacement, clique sur **Arrêter la course** pour modifier les réglages et repartir.
 
 ## Circuits
 
