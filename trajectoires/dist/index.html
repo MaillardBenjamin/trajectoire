@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Course automobile sur papier quadrillé, en solo ou de 2 à 4 joueurs.">
+<title>Trajectoires — Course sur papier</title>
+<link rel="stylesheet" href="style.css">
+<script src="engine.js" defer></script>
+<script src="opponent.js" defer></script>
+<script src="race.js" defer></script>
+</head>
+<body>
+<header class="mast">
+  <div class="brand"><span class="flag" aria-hidden="true">⚑</span><div><h1>Trajectoires</h1><p>Course sur papier</p></div></div>
+  <form id="setup">
+    <label class="sr-only" for="count">Mode de jeu</label>
+    <select id="count"><option value="solo">Solo contre l’IA</option><option value="2" selected>2 joueurs</option><option value="3">3 joueurs</option><option value="4">4 joueurs</option></select>
+    <label class="sr-only" for="difficulty">Difficulté</label>
+    <select id="difficulty" hidden disabled>
+      <option value="easy">Faible</option><option value="medium" selected>Moyen</option><option value="hard">Dur</option>
+    </select>
+    <button type="submit" class="new">↻ &nbsp; Nouvelle course</button>
+  </form>
+</header>
+<main>
+  <section class="sheet" aria-label="Circuit">
+    <div class="sheet-head"><strong>Circuit <span id="race-number">01</span></strong><span id="race-mode">Papier quadrillé · A4</span></div>
+    <div class="board" id="board"><canvas id="track" aria-label="Circuit et trajectoires des voitures"></canvas></div>
+    <div class="sheet-foot"><span><i class="key finish"></i>Départ / arrivée</span><span><i class="key option"></i>Déplacement possible</span></div>
+  </section>
+  <aside>
+    <section class="card" aria-labelledby="turn-title">
+      <div id="turn" aria-live="polite"><p class="eyebrow" id="turn-label">À toi de jouer</p><h2 id="turn-title"></h2><p id="turn-message"></p></div>
+      <div class="move-table" id="moves"></div>
+      <button id="pass" class="pass" hidden>Passer mon tour</button>
+    </section>
+    <section class="card lineup" aria-labelledby="lineup-title"><h2 id="lineup-title">Joueurs</h2><ul id="players"></ul></section>
+    <details class="card rules"><summary>Règles du jeu</summary>
+      <ul>
+        <li>Choisis un point sur la piste ou un bouton du tableau pour jouer ton déplacement.</li>
+        <li>Tu peux modifier ta vitesse d’un carreau par tour. Tout droit prolonge ta trajectoire. En ralentissant, tu peux tourner plus serré.</li>
+        <li>Ton trait doit rester sur la route et se terminer sur une intersection libre.</li>
+        <li>Si tu es bloqué, passe ton tour. Tu repartiras à vitesse 1.</li>
+        <li>Le premier à boucler un tour et à refranchir la ligne dans le sens de la course gagne.</li>
+      </ul>
+    </details>
+  </aside>
+</main>
+</body>
+</html>
