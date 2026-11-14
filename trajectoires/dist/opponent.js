@@ -37,10 +37,10 @@ function referenceTimes(track, start, maxSpeed) {
       }
     }
     // A blocked lane in a duel can lead to a restart from any legal position.
-    // Only model the pass as a reference edge when the track itself forces it.
+    // A pass cannot rescue a car that is too fast to stay on track.
     if (!player.restarting) {
       const stopped = indexOf(afterPass(player));
-      if (moves.length === 0) predecessors[stopped].push(index + 1);
+      if (moves.length === 0 && player.speed <= 1) predecessors[stopped].push(index + 1);
     }
   }
 
@@ -80,6 +80,7 @@ function createOpponent(track, start, difficulty) {
     .filter(({ legal }) => legal);
 
   function duelCost(next, human) {
+    if (tooFastToMove(track, human)) return -1000;
     const responses = legalMoves(human, next);
     const outcomes = responses.length ? responses.map((move) => afterMove(track, human, move)) : [afterPass(human)];
     // Check every immediate reply, including a finish or a blocked exit.
@@ -89,7 +90,7 @@ function createOpponent(track, start, difficulty) {
       const exits = legalMoves(next, reply);
       const cost = exits.length ?
         Math.min(...exits.map((move) => estimate(afterMove(track, next, move)))) :
-        1 + estimate(afterPass(next));
+        tooFastToMove(track, next) ? 999 : 1 + estimate(afterPass(next));
       // Prefer positions that still leave a good exit even if the human
       // takes the most inconvenient intersection.
       worst = Math.max(worst, cost + (reply.speed === 0 ? -0.12 : 0));
@@ -106,6 +107,7 @@ function createOpponent(track, start, difficulty) {
     for (const move of moves) {
       const next = afterMove(track, player, move);
       if (next.won) return move.to;
+      if (tooFastToMove(track, next)) continue;
       const time = estimate(next);
       let score = time;
       if (difficulty === "easy") {
@@ -125,6 +127,6 @@ function createOpponent(track, start, difficulty) {
         bestScore = score;
       }
     }
-    return best?.to;
+    return (best ?? moves[0])?.to;
   };
 }

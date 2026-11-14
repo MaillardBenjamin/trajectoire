@@ -74,7 +74,6 @@ function play(move) {
     player.checked = 0;
     if (player.laps === race.lapCount) race.winner = player;
   }
-  if (!race.winner) race.active = (race.active + 1) % race.players.length;
   advanceTurn();
 }
 
@@ -82,11 +81,25 @@ function pass() {
   if (!race.started || race.winner || getMoves(race).some((move) => move.legal)) return;
   const player = race.players[race.active];
   Object.assign(player, afterPass(player));
-  race.active = (race.active + 1) % race.players.length;
   advanceTurn();
 }
 
 function advanceTurn() {
+  while (!race.winner) {
+    race.active = (race.active + 1) % race.players.length;
+    const player = race.players[race.active];
+    if (player.eliminated) continue;
+    if (!tooFastToMove(race.track, player)) break;
+    player.eliminated = true;
+    race.elimination = `${player.name === "Toi" ? "Tu es éliminé" : player.name + " est éliminé"} — vitesse trop élevée.`;
+    const remaining = race.players.filter((entry) => !entry.eliminated);
+    if (remaining.length === 1) race.winner = remaining[0];
+  }
+  if (race.winner) {
+    clearTimeout(opponentTimer);
+    opponentWorker?.terminate();
+    opponentWorker = undefined;
+  }
   render();
   if (race.difficulty && race.active === 1 && !race.winner) requestOpponent();
 }
@@ -191,6 +204,7 @@ function draw() {
   }
 
   players.forEach((player, index) => {
+    if (player.eliminated) return;
     const selected = winner === player || (!winner && index === active);
     if (selected) {
       ctx.beginPath();
@@ -241,7 +255,8 @@ function render() {
   byId("turn-label").textContent = winner ? "Course terminée" : aiTurn ? "Tour de l’IA" : "À toi de jouer";
   byId("turn-title").textContent = winner ? (race.difficulty ? (winner === players[0] ? "Tu as gagné !" : "L’IA a gagné !") :
     `${winner.name} gagne !`) : player.name;
-  byId("turn-message").textContent = winner ? `${race.lapCount} ${race.lapCount === 1 ? "tour terminé" : "tours terminés"}.` :
+  byId("turn-message").textContent = winner ? (winner.laps < race.lapCount ? "Dernière voiture en course." :
+    `${race.lapCount} ${race.lapCount === 1 ? "tour terminé" : "tours terminés"}.`) :
     aiTurn ? `Niveau ${levels[race.difficulty].toLowerCase()}` :
     legal.length ? "Choisis un déplacement." : "Aucun déplacement possible.";
   if (!race.started) {
@@ -249,23 +264,26 @@ function render() {
     byId("turn-title").textContent = "Course prête";
     byId("turn-message").textContent = "Choisis tes réglages, puis lance la course.";
   }
+  byId("elimination").textContent = race.elimination ?? "";
   byId("pass").hidden = Boolean(!race.started || winner || aiTurn || legal.length);
   trackPass.hidden = byId("pass").hidden;
   if (trackDialog.open) {
-    byId("track-status").textContent = winner ? byId("turn-title").textContent :
+    const status = winner ? byId("turn-title").textContent :
       !race.started ? "Lance la course depuis les réglages." :
       aiTurn ? "Tour de l’IA" : `${player.name} · Tour ${player.laps + 1}/${race.lapCount}`;
+    byId("track-status").textContent = [race.elimination, status].filter(Boolean).join(" ");
   }
   board.querySelectorAll(".target").forEach((target) => target.remove());
   byId("players").replaceChildren(...players.map((entry, index) => {
     const row = document.createElement("li");
-    if (index === active) row.className = "active";
+    if (entry === winner || (!winner && index === active)) row.className = "active";
     row.style.setProperty("--player", entry.color);
     const dot = document.createElement("i");
     dot.className = "dot";
     const speed = document.createElement("span");
     const lap = Math.min(entry.laps + 1, race.lapCount);
-    speed.textContent = `Tour ${lap}/${race.lapCount} · ${entry.speed} car. / tour`;
+    speed.textContent = entry.eliminated ? "Éliminé · trop vite" :
+      `Tour ${lap}/${race.lapCount} · ${entry.speed} car. / tour`;
     row.append(dot, entry.name, speed);
     return row;
   }));

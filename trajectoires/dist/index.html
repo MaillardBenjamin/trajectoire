@@ -47,7 +47,7 @@
   </section>
   <aside>
     <section class="card" aria-labelledby="turn-title">
-      <div id="turn" aria-live="polite"><p class="eyebrow" id="turn-label">À toi de jouer</p><h2 id="turn-title"></h2><p id="turn-message"></p></div>
+      <div id="turn" aria-live="polite"><p class="eyebrow" id="turn-label">À toi de jouer</p><h2 id="turn-title"></h2><p id="turn-message"></p><p id="elimination"></p></div>
       <div class="move-table" id="moves"></div>
       <button id="pass" class="pass" hidden>Passer mon tour</button>
     </section>
@@ -57,8 +57,8 @@
         <li>Choisis un point sur la piste ou un bouton du tableau pour jouer ton déplacement.</li>
         <li>Tu peux modifier ta vitesse d’un carreau par tour. Tout droit prolonge ta trajectoire. En ralentissant, tu peux tourner plus serré.</li>
         <li>Ton trait doit rester sur la route et se terminer sur une intersection libre.</li>
-        <li>Si tu es bloqué, passe ton tour. Tu repartiras à vitesse 1.</li>
-        <li>Le premier à boucler le nombre de tours choisi dans le sens de la course gagne.</li>
+        <li>Si ta vitesse rend tous tes déplacements impossibles sur la piste, tu es éliminé. Si les autres voitures bloquent tes déplacements, passe ton tour.</li>
+        <li>Gagne en bouclant le nombre de tours choisi ou en restant la dernière voiture en course.</li>
       </ul>
     </details>
   </aside>

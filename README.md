@@ -25,8 +25,8 @@ Choisis parmi dix tracés classés par difficulté, de **L’Anneau** aux **Doub
 1. Jouez chacun votre tour. Clique sur une intersection proposée ou utilise le tableau des déplacements.
 2. Tu peux accélérer ou ralentir d’un carreau par tour, ou garder ta vitesse. À vitesse constante, **Tout droit** reproduit ton dernier déplacement. Si tu viens d’avancer de quatre carreaux vers le haut et d’un vers la droite, tu refais le même déplacement.
 3. Plus tu roules lentement, plus tu peux tourner serré. À vitesse 1, deux virages successifs permettent de passer d’une direction à sa perpendiculaire en passant par une diagonale.
-4. Le segment entier doit rester sur la piste et se terminer sur une intersection libre. Si aucun coup n’est possible, passe ton tour. Tu repartiras à vitesse 1.
-5. Le premier à franchir la ligne de départ et d’arrivée dans le sens de la course après avoir bouclé le nombre de tours choisi gagne.
+4. Le segment entier doit rester sur la piste et se terminer sur une intersection libre. Si ta vitesse rend tous les déplacements impossibles sur la piste, tu es éliminé. Si les autres voitures bloquent tes déplacements, passe ton tour et repars à vitesse 1.
+5. Le premier à franchir la ligne de départ et d’arrivée dans le sens de la course après avoir bouclé le nombre de tours choisi gagne. La dernière voiture encore en course gagne aussi si toutes les autres sont éliminées.
 
 Sur la grille, chaque voiture est représentée par un point. Dès son premier déplacement, elle devient une flèche orientée dans le sens de son dernier mouvement.
 

@@ -215,7 +215,7 @@ function getMoves(state, includeAlternativeStarts = false) {
   const makeMove = (speed, direction, index) => {
     const step = stepOnSquare(speed, index);
     const to = point(player.x + step.x, player.y + step.y);
-    const occupied = state.players.some((other) => other.x === to.x && other.y === to.y);
+    const occupied = state.players.some((other) => !other.eliminated && other.x === to.x && other.y === to.y);
     return { speed, direction, to, legal: !occupied && onRoad(state.track, player, to) };
   };
   // At fixed speed the previous vector is one point on the surrounding square.
@@ -241,4 +241,8 @@ function afterMove(track, player, move) {
 
 function afterPass(player) {
   return { ...player, speed: 0, restarting: true };
+}
+
+function tooFastToMove(track, player) {
+  return player.speed > 1 && !getMoves({ track, players: [player], active: 0 }).some(({ legal }) => legal);
 }
