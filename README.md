@@ -18,7 +18,7 @@ Ouvre [http://127.0.0.1:8000](http://127.0.0.1:8000), choisis le mode de jeu, le
 
 ## Circuits
 
-Choisis parmi dix tracés classés par difficulté, de **L’Anneau** aux **Doubles Épingles**, ou sélectionne **Circuit aléatoire** pour générer un tracé à chaque partie. Le nombre de tours se règle de **1 à 3** dans les deux modes de jeu.
+Choisis parmi dix circuits classiques et dix grands circuits techniques sur une grille de 80 × 53 carreaux, ou sélectionne **Circuit aléatoire** pour générer un tracé à chaque partie. Le nombre de tours se règle de **1 à 3** dans les deux modes de jeu.
 
 ## Règles
 

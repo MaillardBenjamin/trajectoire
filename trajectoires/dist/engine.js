@@ -1,7 +1,7 @@
 "use strict";
 
-const columns = 50;
-const rows = 33;
+const standardGrid = { columns: 50, rows: 33 };
+const largeGrid = { columns: 80, rows: 53 };
 const directions = [
   { name: "Gauche", symbol: "↖", turn: -1 },
   { name: "Tout droit", symbol: "↑", turn: 0 },
@@ -25,6 +25,59 @@ const circuits = [
   { name: "Les Virages enchaînés", radius: 2.35, bend: 4, insets: [[38, 30, 12, 3], [22, 14, 10, 2]] },
   { name: "Les Doubles Épingles", radius: 2.15, bend: 3, insets: [[38, 31, 15, 2], [22, 15, 14, 2]] }
 ];
+
+// Each sector is a sequence of chicanes. The tuple gives entry x, exit x,
+// depth toward the infield and corner rounding in grid units.
+const largeCircuits = [
+  { name: "Le Grand S", radius: 3.1, top: [[46, 59, 10, 4]], bottom: [[64, 52, 14, 4], [32, 19, 12, 4]] },
+  { name: "Les Dunes", radius: 3, top: [[41, 52, 8, 3], [59, 68, 12, 3]], bottom: [[57, 44, 15, 3], [33, 19, 11, 4]] },
+  { name: "Le Canyon", radius: 2.85, top: [[44, 61, 16, 3]], bottom: [[66, 54, 18, 3], [45, 35, 12, 3], [25, 14, 15, 3]] },
+  { name: "Les Terrasses", radius: 2.75, top: [[42, 52, 12, 3], [60, 69, 14, 3]], bottom: [[65, 53, 12, 3], [45, 34, 16, 3], [25, 15, 12, 3]] },
+  { name: "Le Col", radius: 2.7, top: [[40, 50, 15, 2], [59, 67, 10, 2]], bottom: [[66, 56, 18, 2], [46, 37, 13, 2], [27, 16, 18, 3]] },
+  { name: "Les Lacets", radius: 2.6, top: [[39, 48, 15, 2], [58, 68, 14, 2]], bottom: [[66, 56, 17, 2], [48, 38, 17, 2], [29, 18, 17, 2]], return: [[20, 29, 11, 2]] },
+  { name: "Le Labyrinthe", radius: 2.5, top: [[41, 50, 15, 2], [59, 68, 16, 2]], bottom: [[66, 57, 18, 2], [48, 39, 18, 2], [30, 21, 18, 2], [15, 10, 11, 2]] },
+  { name: "Les Gorges", radius: 2.4, top: [[40, 49, 16, 2], [57, 65, 16, 2]], bottom: [[67, 58, 19, 2], [49, 41, 19, 2], [33, 24, 19, 2], [16, 10, 15, 2]], return: [[20, 29, 13, 2]] },
+  { name: "Le Serpentin", radius: 2.3, top: [[39, 48, 16, 2], [54, 61, 17, 2], [66, 71, 12, 2]], bottom: [[68, 59, 19, 2], [51, 43, 19, 2], [35, 26, 19, 2], [18, 10, 19, 2]], return: [[21, 30, 15, 2]] },
+  { name: "Les Épingles du sommet", radius: 2.2, top: [[39, 46, 17, 2], [52, 59, 17, 2], [65, 71, 17, 2]], bottom: [[68, 60, 20, 2], [52, 44, 20, 2], [36, 28, 20, 2], [20, 12, 20, 2]], return: [[10, 15, 12, 2], [22, 30, 16, 2]] }
+];
+
+function largeTrack(circuit) {
+  const finish = { x: 34, y: 5, dx: 1, dy: 0 };
+  const corners = [finish];
+  const bends = [0];
+  const checkpoints = [];
+  const left = 4;
+  const right = 76;
+  const bottom = 48;
+
+  function add(x, y, bend = 3) {
+    corners.push(point(x, y));
+    bends.push(bend);
+  }
+
+  function addChicanes(chicanes, edge, inward, dx) {
+    for (const [entry, exit, depth, bend] of chicanes) {
+      const apex = edge + inward * depth;
+      add(entry, edge, bend);
+      add(entry, apex, bend);
+      add(exit, apex, bend);
+      add(exit, edge, bend);
+      checkpoints.push({ x: (entry + exit) / 2, y: apex, dx, dy: 0 });
+    }
+  }
+
+  addChicanes(circuit.top, finish.y, 1, 1);
+  add(right, finish.y);
+  add(right, bottom);
+  checkpoints.push({ x: right, y: 26, dx: 0, dy: 1 });
+  addChicanes(circuit.bottom, bottom, -1, -1);
+  add(left, bottom);
+  add(left, finish.y);
+  checkpoints.push({ x: left, y: 26, dx: 0, dy: -1 });
+  addChicanes(circuit.return ?? [], finish.y, 1, 1);
+  corners.push(finish);
+  return buildTrack(corners, (index) => bends[index], circuit.radius, checkpoints, finish, largeGrid);
+}
 
 function presetTrack({ radius, bend, insets }) {
   const finish = { x: 24, y: 5, dx: 1, dy: 0 };
@@ -71,15 +124,18 @@ function generateTrack() {
   return buildTrack(corners, bendAt, radius, checkpoints, finish);
 }
 
-function buildTrack(corners, bendAt, radius, checkpoints, finish) {
+function buildTrack(corners, bendAt, radius, checkpoints, finish, grid = standardGrid) {
   const spine = [corners[0]];
   for (let i = 1; i < corners.length - 1; i++) {
     const corner = corners[i];
-    const bend = bendAt(i);
     const before = corners[i - 1];
     const after = corners[i + 1];
-    const entry = between(corner, before, bend / Math.hypot(before.x - corner.x, before.y - corner.y));
-    const exit = between(corner, after, bend / Math.hypot(after.x - corner.x, after.y - corner.y));
+    const incoming = Math.hypot(before.x - corner.x, before.y - corner.y);
+    const outgoing = Math.hypot(after.x - corner.x, after.y - corner.y);
+    const bend = bendAt(i);
+    const maxFraction = grid === largeGrid ? .5 : 1;
+    const entry = between(corner, before, Math.min(bend / incoming, maxFraction));
+    const exit = between(corner, after, Math.min(bend / outgoing, maxFraction));
     for (let step = 0; step <= 10; step++) {
       const t = step / 10;
       const sample = between(between(entry, corner, t), between(corner, exit, t), t);
@@ -93,7 +149,7 @@ function buildTrack(corners, bendAt, radius, checkpoints, finish) {
     const length = Math.hypot(to.x - from.x, to.y - from.y);
     return { from, length, ux: (to.x - from.x) / length, uy: (to.y - from.y) / length };
   });
-  return { spine, segments, radius, checkpoints, finish };
+  return { ...grid, spine, segments, radius, checkpoints, finish };
 }
 
 function slab(origin, delta, low, high) {
@@ -108,15 +164,17 @@ function slab(origin, delta, low, high) {
 const roadCache = new WeakMap();
 
 function onRoad(track, from, to) {
+  const { columns, rows } = track;
   if (to.x < 0 || to.x > columns || to.y < 0 || to.y > rows) return false;
   let cache = roadCache.get(track);
   if (!cache) {
     cache = new Map();
     roadCache.set(track, cache);
   }
-  const a = from.y * 64 + from.x;
-  const b = to.y * 64 + to.x;
-  const key = Math.min(a, b) * 4096 + Math.max(a, b);
+  const stride = columns + 1;
+  const a = from.y * stride + from.x;
+  const b = to.y * stride + to.x;
+  const key = Math.min(a, b) * stride * (rows + 1) + Math.max(a, b);
   if (!cache.has(key)) cache.set(key, coversSegment(track, from, to));
   return cache.get(key);
 }

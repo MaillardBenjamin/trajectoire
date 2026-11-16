@@ -28,7 +28,7 @@ function resetRace(track, started = false) {
   clearTimeout(opponentTimer);
   opponentWorker?.terminate();
   opponentWorker = undefined;
-  const circuit = circuits[Number(circuitSelect.value) - 1];
+  const circuit = courseOptions[Number(circuitSelect.value) - 1];
   const playerCount = mode.value === "solo" ? 2 : Number(mode.value);
   const difficulty = mode.value === "solo" ? difficultySelect.value : null;
   const lapCount = Number(lapSelect.value);
@@ -60,9 +60,13 @@ function resetRace(track, started = false) {
       opponentWorker = undefined;
     }
   }
-  byId("race-mode").textContent = difficulty ? `Solo · ${levels[difficulty]}` : "Papier quadrillé · A4";
+  sheet.classList.toggle("large-track", track.columns === largeGrid.columns);
+  const aspect = `${track.columns} / ${track.rows}`;
+  board.style.aspectRatio = trackMap.style.aspectRatio = aspect;
+  byId("race-mode").textContent = difficulty ? `Solo · ${levels[difficulty]}` :
+    `${track.columns} × ${track.rows} carreaux`;
   byId("race-name").textContent = circuit ?
-    `${circuits.indexOf(circuit) + 1}/10 · ${circuit.name}` :
+    `${circuitSelect.value}/${courseOptions.length} · ${circuit.name}` :
     "Circuit aléatoire";
   render();
 }
@@ -132,7 +136,7 @@ function draw() {
   const width = canvas.clientWidth;
   const height = canvas.clientHeight;
   if (!width || !height) return;
-  const pixelRatio = window.devicePixelRatio || 1;
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 4096 / Math.max(width, height));
   const pixelWidth = Math.round(width * pixelRatio);
   const pixelHeight = Math.round(height * pixelRatio);
   if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
@@ -140,7 +144,7 @@ function draw() {
     canvas.height = pixelHeight;
   }
   const { track, players, active, winner } = race;
-  const { spine, radius, finish } = track;
+  const { spine, radius, finish, columns, rows } = track;
   ctx.setTransform(pixelWidth / columns, 0, 0, pixelHeight / rows, 0, 0);
   ctx.clearRect(0, 0, columns, rows);
   ctx.fillStyle = "#f6f5e9";
@@ -244,7 +248,7 @@ function draw() {
 
 function render() {
   preview = null;
-  const { active, players, winner } = race;
+  const { active, players, winner, track: { columns, rows } } = race;
   const player = players[active];
   const aiTurn = Boolean(race.difficulty && active === 1 && !winner);
   const locked = race.moved && !winner;
@@ -391,10 +395,10 @@ function drawTrackMap() {
   if (!width || !height || !board.clientWidth || !board.clientHeight) return;
   if (trackMap.width !== width) trackMap.width = width;
   if (trackMap.height !== height) trackMap.height = height;
+  const { spine, radius, finish, columns, rows } = race.track;
   mapContext.setTransform(width / columns, 0, 0, height / rows, 0, 0);
   mapContext.fillStyle = "#f1eee3";
   mapContext.fillRect(0, 0, columns, rows);
-  const { spine, radius, finish } = race.track;
   mapContext.beginPath();
   mapContext.moveTo(spine[0].x, spine[0].y);
   for (const p of spine.slice(1)) mapContext.lineTo(p.x, p.y);
@@ -436,6 +440,7 @@ function centerTrack() {
   const { track, players, active, difficulty, started, winner } = race;
   const car = winner ?? players[difficulty ? 0 : active];
   const position = started ? car : track.finish;
+  const { columns, rows } = track;
   trackScroll.scrollLeft = board.clientWidth * position.x / columns - trackScroll.clientWidth / 2;
   trackScroll.scrollTop = board.clientHeight * position.y / rows - trackScroll.clientHeight / 2;
   drawTrackMap();
@@ -492,13 +497,24 @@ const lapSelect = byId("laps");
 const startButton = byId("start-race");
 const stopButton = byId("stop-race");
 
-circuits.forEach(({ name }, index) => {
-  circuitSelect.add(new Option(`${index + 1}. ${name}`, String(index + 1)));
-});
+const courseOptions = [...circuits, ...largeCircuits];
+for (const [label, entries, offset] of [
+  ["Circuits classiques", circuits, 0],
+  ["Grands circuits", largeCircuits, circuits.length]
+]) {
+  const group = document.createElement("optgroup");
+  group.label = label;
+  entries.forEach(({ name }, index) => {
+    const number = offset + index + 1;
+    group.append(new Option(`${number}. ${name}`, String(number)));
+  });
+  circuitSelect.append(group);
+}
 
 function selectedTrack() {
-  const circuit = circuits[Number(circuitSelect.value) - 1];
-  return circuit ? presetTrack(circuit) : generateTrack();
+  const index = Number(circuitSelect.value) - 1;
+  if (index < 0) return generateTrack();
+  return index < circuits.length ? presetTrack(courseOptions[index]) : largeTrack(courseOptions[index]);
 }
 
 circuitSelect.addEventListener("change", () => resetRace(selectedTrack()));

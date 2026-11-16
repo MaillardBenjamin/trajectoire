@@ -66,6 +66,22 @@ aside { display: grid; gap: 12px; }
 .rules ul { padding-left: 18px; margin: 10px 0 0; font-size: .84rem; line-height: 1.5; }
 .rules li + li { margin-top: 5px; }
 .sr-only { position: absolute; clip-path: inset(50%); width: 1px; height: 1px; overflow: hidden; white-space: nowrap; }
+.site-footer {
+  max-width: 1440px;
+  margin: auto;
+  padding: 0 clamp(16px, 4vw, 56px) 20px;
+  color: var(--muted);
+  font-size: .83rem;
+}
+.site-footer nav { display: flex; flex-wrap: wrap; column-gap: 16px; }
+.site-footer a { display: inline-flex; align-items: center; min-height: 44px; color: inherit; }
+.site-information { display: block; max-width: 760px; margin: auto; padding: 24px 16px 40px; line-height: 1.55; }
+.site-information a { color: #17658b; }
+.site-information h1 { margin: 16px 0 24px; }
+.site-information section + section { margin-top: 28px; }
+.site-information h2 { font-size: 1.36rem; margin-bottom: 12px; }
+.site-information h3 { font-size: 1rem; margin: 18px 0 6px; }
+.site-information p + p { margin-top: 8px; }
 #track-dialog[open] {
   position: fixed;
   inset: 0;
@@ -219,4 +235,13 @@ body:has(#track-dialog[open]) { overflow: hidden; }
   #track-dialog .racing:not(.overview) .board { min-width: 1800px; }
   #track-dialog .target { width: 34px; }
   .move-table button { min-height: 44px; }
+}
+
+.large-track.racing .board { min-width: 1120px; }
+.large-track.racing .track-scroll { max-height: min(65dvh, 680px); }
+#track-dialog .large-track.racing .track-scroll { max-height: none; }
+#track-dialog .large-track.racing:not(.overview) .board { min-width: 2560px; }
+@media (max-width: 860px), (pointer: coarse) {
+  .large-track.racing .board { min-width: 1920px; }
+  .large-track.racing .track-scroll { max-height: 52dvh; }
 }
