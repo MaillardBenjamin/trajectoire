@@ -33,6 +33,7 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(252px, 295px)
 .sheet-head { margin-bottom: 13px; }
 .sheet-head > span { color: var(--muted); }
 .track-actions { display: none; align-items: center; gap: 8px; margin-bottom: 10px; }
+.sheet:has(.track-tool:not([hidden])) .track-actions { display: flex; }
 .track-scroll { overflow: auto; overscroll-behavior: contain; }
 .track-turn:not([hidden]) { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
 #track-status { font-weight: 650; }
@@ -155,6 +156,7 @@ body:has(#track-dialog[open]) { overflow: hidden; }
 #track-status { flex: 1 1 96px; min-width: 0; }
 #track-map {
   display: block;
+  margin-left: auto;
   width: clamp(92px, 32vw, 132px);
   height: auto;
   aspect-ratio: 50 / 33;
@@ -166,7 +168,7 @@ body:has(#track-dialog[open]) { overflow: hidden; }
   width: min(100%, calc((100dvh - 150px) * 50 / 33));
   margin: auto;
 }
-#track-dialog .overview .target { display: none; }
+.sheet.overview .target { display: none; }
 #track-dialog .track-scroll { touch-action: pan-x pan-y; }
 
 @media (max-width: 860px), (pointer: coarse) {
@@ -237,11 +239,15 @@ body:has(#track-dialog[open]) { overflow: hidden; }
   .move-table button { min-height: 44px; }
 }
 
-.large-track.racing .board { min-width: 1120px; }
-.large-track.racing .track-scroll { max-height: min(65dvh, 680px); }
-#track-dialog .large-track.racing .track-scroll { max-height: none; }
+.racing .track-scroll { max-height: min(60dvh, 680px); }
+.racing:not(.overview) .board { min-width: 1350px; }
+.large-track.racing:not(.overview) .board { min-width: 2160px; }
+.sheet.overview .board { min-width: 0; }
+.sheet.overview .track-scroll { max-height: none; }
+#track-dialog .track-scroll { max-height: none; }
 #track-dialog .large-track.racing:not(.overview) .board { min-width: 2560px; }
 @media (max-width: 860px), (pointer: coarse) {
-  .large-track.racing .board { min-width: 1920px; }
-  .large-track.racing .track-scroll { max-height: 52dvh; }
+  .racing:not(.overview) .board { min-width: 1200px; }
+  .large-track.racing:not(.overview) .board { min-width: 1920px; }
+  .racing .track-scroll { max-height: 52dvh; }
 }

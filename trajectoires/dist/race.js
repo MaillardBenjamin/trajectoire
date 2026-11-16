@@ -28,6 +28,8 @@ function resetRace(track, started = false) {
   clearTimeout(opponentTimer);
   opponentWorker?.terminate();
   opponentWorker = undefined;
+  sheet.classList.remove("overview");
+  trackOverview.setAttribute("aria-pressed", "false");
   const circuit = courseOptions[Number(circuitSelect.value) - 1];
   const playerCount = mode.value === "solo" ? 2 : Number(mode.value);
   const difficulty = mode.value === "solo" ? difficultySelect.value : null;
@@ -261,8 +263,10 @@ function render() {
   byId("start-label").textContent = startButton.title = startLabel;
   stopButton.hidden = !race.started || Boolean(winner);
   stopTrack.hidden = !trackDialog.open || stopButton.hidden;
-  openTrack.hidden = trackDialog.open || (mobileLayout.matches && !race.started);
+  openTrack.hidden = trackDialog.open || !race.started;
   sheet.classList.toggle("racing", race.started && !winner);
+  const showTrackTools = trackDialog.open || race.started;
+  locateCar.hidden = trackOverview.hidden = byId("track-turn").hidden = !showTrackTools;
   byId("field-difficulty").hidden = difficultySelect.hidden;
   for (const [select, value] of [
     [mode, mode.value === "solo" ? "Solo" : mode.value],
@@ -289,7 +293,8 @@ function render() {
   }
   byId("elimination").textContent = race.elimination ?? "";
   byId("pass").hidden = Boolean(!race.started || winner || aiTurn || legal.length);
-  trackPass.hidden = byId("pass").hidden;
+  trackPass.hidden = !trackDialog.open || byId("pass").hidden;
+  byId("track-status").hidden = !trackDialog.open;
   if (trackDialog.open) {
     const status = winner ? byId("turn-title").textContent :
       !race.started ? "Lance la course depuis les réglages." :
@@ -388,7 +393,6 @@ function render() {
 }
 
 function drawTrackMap() {
-  if (!trackDialog.open) return;
   const ratio = window.devicePixelRatio || 1;
   const width = Math.round(trackMap.clientWidth * ratio);
   const height = Math.round(trackMap.clientHeight * ratio);
@@ -425,7 +429,7 @@ function drawTrackMap() {
   for (const [index, player] of race.players.entries()) {
     if (player.eliminated) continue;
     mapContext.beginPath();
-    mapContext.arc(player.x, player.y, 1, 0, 2 * Math.PI);
+    mapContext.arc(player.x, player.y, columns / 50, 0, 2 * Math.PI);
     mapContext.fillStyle = player.color;
     mapContext.fill();
     mapContext.lineWidth = .32;
@@ -448,8 +452,7 @@ function centerTrack() {
 
 function showTrack() {
   trackDialog.append(sheet);
-  openTrack.hidden = true;
-  closeTrack.hidden = locateCar.hidden = trackOverview.hidden = byId("track-turn").hidden = false;
+  closeTrack.hidden = false;
   trackDialog.showModal();
   render();
   closeTrack.focus({ preventScroll: true });
@@ -460,7 +463,7 @@ trackDialog.addEventListener("close", () => {
   trackHome.prepend(sheet);
   sheet.classList.remove("overview");
   trackOverview.setAttribute("aria-pressed", "false");
-  closeTrack.hidden = locateCar.hidden = trackOverview.hidden = byId("track-turn").hidden = true;
+  closeTrack.hidden = true;
   render();
   (openTrack.hidden ? circuitSelect : openTrack).focus({ preventScroll: true });
 });
