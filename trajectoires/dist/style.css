@@ -251,3 +251,5 @@ body:has(#track-dialog[open]) { overflow: hidden; }
   .large-track.racing:not(.overview) .board { min-width: 1920px; }
   .racing .track-scroll { max-height: 52dvh; }
 }
+
+.license-text { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
